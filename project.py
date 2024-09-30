@@ -8,7 +8,8 @@ from pyfiglet import Figlet
 
 figlet = Figlet()
 figlet.setFont(font = "slant")
-leaderboard_file = 'CS50P - Final Project\leaderboard.txt'
+base_dir = os.path.dirname(os.path.abspath(__file__))
+leaderboard_file = os.path.join(base_dir, "leaderboard.txt")
 
 def main_menu():
     game_modes = [["1.", "PLAY!"],
