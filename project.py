@@ -1,34 +1,71 @@
 import requests
 import random
 import html
+import sys
 import os
 from tabulate import tabulate
+from pyfiglet import Figlet
+
+figlet = Figlet()
+figlet.setFont(font = "slant")
+leaderboard_file = 'D:\Python Projects\CS50P - Final Project\leaderboard.txt'
+
+def main_menu():
+    game_modes = [["1.", "PLAY!"],
+                  ["2.", "LEADERBOARD"],
+                  ["3.", "EXIT GAME"]]
+    print("\n"*35)
+    print(figlet.renderText("Brainstorm Blitz!"))
+    print(tabulate(game_modes, headers=["Choice No.", "Main Menu"], tablefmt="rounded_grid", colalign=("center","center")))
+    
+    while True:
+        menu_choice = input("Select from the menu: ")
+        try:
+            match int(menu_choice):
+                case 1:
+                    start_game()
+                    break
+                
+                case 2:
+                    display_leaderboard()
+                    break
+                
+                case 3:
+                    while True:
+                        confirmation = input("Are you sure you want to exit? (Y/N): ").strip().upper()
+                        
+                        if confirmation == "Y":
+                            sys.exit("Goodbye! Thanks for playing!")
+                            
+                        elif confirmation == "N":
+                            break  
+                        else:
+                            print("Invalid choice. Please enter Y or N.")
+                            
+        except ValueError:
+            print("Please enter a valid number.")
 
 
-def main():
+def start_game():
     category = get_category()
-    if category == None:
-        question_amount = get_questions_amount()
-        difficulty = get_difficulty()
-        question_type = get_question_type()
-        url = f"https://opentdb.com/api.php?amount={question_amount}&difficulty={difficulty}&type={question_type}"
-        json_url = requests.get(url).json()
-        questions = get_questions(json_url)
-        all_answers = get_answers(json_url)
-    
-        display_quiz(questions, all_answers, question_type)
-        
-    elif category != None:
-        question_amount = get_questions_amount()
-        difficulty = get_difficulty()
-        question_type = get_question_type()
-        url = f"https://opentdb.com/api.php?amount={question_amount}&category={category}&difficulty={difficulty}&type={question_type}"
-        json_url = requests.get(url).json()
-        questions = get_questions(json_url)
-        all_answers = get_answers(json_url)
-        
-        display_quiz(questions, all_answers, question_type)
-    
+
+    if category is None:
+        main_menu()
+        return
+
+    question_amount = get_questions_amount()
+    difficulty = get_difficulty()
+    question_type = get_question_type()
+
+    url = f"https://opentdb.com/api.php?amount={question_amount}&difficulty={difficulty}&type={question_type}"
+    if category:
+        url += f"&category={category}"
+
+    json_url = requests.get(url).json()
+    questions = get_questions(json_url)
+    all_answers = get_answers(json_url)
+
+    display_quiz(questions, all_answers, question_type)
 
 def get_questions_amount():
     while True:
@@ -39,7 +76,7 @@ def get_questions_amount():
             else:
                 raise ValueError
             
-        except ValueError:
+        except Exception:
             print("Invalid amount")
             continue
 
@@ -59,10 +96,11 @@ def get_category():
                             ["12.", "Sports"], 
                             ["13.", "Vehicles"],
                             ["14.", "All Categories"],
-                            ["15.", "One Random Category"]]
+                            ["15.", "One Random Category"],
+                            ["0.", "Back to Menu"]]
     
     top_level_id_dict = {"1":"27", "2":"25", "3":"26", "5":"9", "6":"22", "7":"23",
-                      "8":"20", "9":"24", "11":"17", "12":"21", "13":"28"}
+                         "8":"20", "9":"24", "11":"17", "12":"21", "13":"28"}
     
     entertainment = [["1.","Board Games"],
                      ["2.","Books"],
@@ -73,24 +111,32 @@ def get_category():
                      ["7.","Musicals & Theatres"],
                      ["8.","Music"],
                      ["9.","Television"],
-                     ["10.","Video Games"]]
+                     ["10.","Video Games"],
+                     ["0.", "Back to Categories"]]
     
     entertainment_id_dict = {"1":"16", "2":"10", "3":"32", "4":"29", "5":"11", 
                              "6":"31", "7":"13", "8":"12", "9":"14", "10":"15"}
     
     science = [["1.","Computers"],
                ["2.","Gadgets"],
-               ["3.","Mathematics"]]
+               ["3.","Mathematics"],
+               ["0.", "Back to Categories"]]
     
     science_id_dict = {"1":"18", "2":"30", "3":"19"}
     
-    print("\n" * 2)
-    print(tabulate(top_level_categories, headers=["Choice No.", "Category Name"], tablefmt="rounded_grid"))
-    print("Categories with '+' have more subcategories to choose from :D\n")
     while True:
+        print("\n"*10)
+        print(figlet.renderText('Categories'))
+        print(tabulate(top_level_categories, headers=["Choice No.", "Category Name"], tablefmt="rounded_grid", colalign=("center","center")))
+        print("Categories with '+' have more subcategories to choose from :D\n")
+        
         try:
             selection = input("Desired Category Number: ").strip().strip(".")
-            if int(selection) > 15 or int(selection) < 1:
+            
+            if selection == "0":
+                return None
+            
+            if int(selection) > 15 or int(selection) < 0:
                 raise ValueError
             
             elif selection in top_level_id_dict.keys():
@@ -101,29 +147,38 @@ def get_category():
                 match int(selection):
                     case 4:
                         while True:
-                            print('\n' * 2)
+                            print('\n' * 20)
+                            print(figlet.renderText('Entertainment'))
                             print("Entertainment Sub-categories:")
-                            print(tabulate(entertainment, headers=["Choice No.", "Category Name"], tablefmt="rounded_grid"))
+                            print(tabulate(entertainment, headers=["Choice No.", "Category Name"], tablefmt="rounded_grid", colalign=("center","center")))
                             sub_selection = input("Desired Category Number: ").strip().strip(".")
                             try:
-                                if int(sub_selection) > 10 or int(sub_selection) < 1:
+                                if int(sub_selection) > 10 or int(sub_selection) < 0:
                                     raise ValueError
-                                print(question_count(entertainment_id_dict.get(sub_selection)))
-                                return entertainment_id_dict.get(sub_selection)
+                                
+                                if sub_selection == "0":
+                                    break
+                                else:
+                                    print(question_count(entertainment_id_dict.get(sub_selection)))
+                                    return entertainment_id_dict.get(sub_selection)
                             except ValueError:
                                 print("Invalid subcategory selection. Please choose a valid option.")
                     
                     case 10:
                         while True:
-                            print('\n' * 2)
+                            print('\n' * 40)
+                            print(figlet.renderText('Science'))
                             print("Science Sub-categories:")
-                            print(tabulate(science, headers=["Choice No.", "Category Name"], tablefmt="rounded_grid"))
+                            print(tabulate(science, headers=["Choice No.", "Category Name"], tablefmt="rounded_grid", colalign=("center","center")))
                             sub_selection = input("Desired Category Number: ").strip().strip(".")
                             try:
-                                if int(sub_selection) > 3 or int(sub_selection) < 1:
+                                if int(sub_selection) > 3 or int(sub_selection) < 0:
                                     raise ValueError
-                                print(question_count(science_id_dict.get(sub_selection)))
-                                return science_id_dict.get(sub_selection)
+                                if sub_selection == "0":
+                                    break
+                                else:
+                                    print(question_count(science_id_dict.get(sub_selection)))
+                                    return science_id_dict.get(sub_selection)
                             except ValueError:
                                 print("Invalid subcategory selection. Please choose a valid option.")
                 
@@ -141,7 +196,8 @@ def get_category():
         except ValueError:
             print("Invalid Category Selection.")
             continue
-
+        
+        
 def get_difficulty():
     
     print()
@@ -149,7 +205,7 @@ def get_difficulty():
                         ["2.", "Medium"],
                         ["3.","Hard"]]
     
-    print(tabulate(difficulty_table, headers=["Choice No.", "Difficulty"], tablefmt="rounded_grid"))
+    print(tabulate(difficulty_table, headers=["Choice No.", "Difficulty"], tablefmt="rounded_grid", colalign=("center","center")))
     while True:
         try:
             difficulty = input("Select a difficulty: ").lower().strip().strip(".")
@@ -189,6 +245,8 @@ def get_question_type():
 def display_quiz(questions, all_answers, question_type):
     score = 0
     streak = 0
+    highest_streak = 0
+    
     praises_list = ["Good Job!", "Nice Work!", "You're A Genius!!", "Wow!", 
                     "OMG!", "Amazing!", "Spectacular!", "Really Nice!",
                     "Are You Cheating?!", "No Way!", "Insane!", "Outstanding!"]
@@ -215,7 +273,7 @@ def display_quiz(questions, all_answers, question_type):
             if user_input == 'H' and question_type == "multiple" and not hint_used:
                 score, hint_used, option_labels, answers = apply_hint(answers, correct_answer, option_labels, score)
                 answer_table = list(zip(option_labels, answers))
-                print(tabulate(answer_table, headers=["Option", "Answer"], tablefmt="rounded_grid"))
+                print(tabulate(answer_table, headers=["Option", "Answer"], tablefmt="rounded_grid", colalign=("center","center")))
             elif user_input in option_labels:
                 break
             else:
@@ -224,18 +282,81 @@ def display_quiz(questions, all_answers, question_type):
         if answers[option_labels.index(user_input)] == correct_answer:
             streak += 1
             score += score_multiplier(streak)
+            print(f"\n\n{'='*30}")
             print(f"\nCorrect! {random.choice(praises_list)}\n")
             print(f"Current streak: 🔥 {streak}")
             print(f"+{score_multiplier(streak)} points!\n")
             print(f"CURRENT SCORE: {score} points\n")
+            print(f"{'='*30}")
+            
+            if streak > highest_streak:
+                highest_streak = streak
+                
         else:
             streak = 0
-            print(f"Whoops! That was wrong. Streak Reset! 🔥 {streak}")
+            print(f"\n\n{'='*45}")
+            print(f"\nWhoops! That was wrong. Streak Reset! 🔥 {streak}")
             print(f"The correct answer was: {correct_answer}\n")
             print(f"CURRENT SCORE: {score} points\n")
+            print(f"{'='*45}")
             
     print(f"Quiz complete! Your final score: {score} points!")
+    
+    # After quiz, prompt for leaderboard entry
+    add_to_leaderboard_prompt(score, highest_streak, len(questions))
 
+
+def add_to_leaderboard_prompt(score, highest_streak, num_questions):
+    add_prompt = input("Would you like to add your score to the leaderboard? (Y/N): ").strip().upper()
+    if add_prompt == 'Y':
+        name = input("Enter your name: ").strip()
+        add_to_leaderboard(name, score, highest_streak, num_questions)
+        display_leaderboard()
+    else:
+        print("No entry added to the leaderboard.")
+
+
+def add_to_leaderboard(name, score, highest_streak, num_questions):
+    leaderboard = []
+    
+    # Read existing leaderboard
+    if os.path.exists(leaderboard_file):
+        with open(leaderboard_file, 'r') as file:
+            
+            # Skip header if it exists
+            next(file)
+            
+            for line in file:
+                player_name, player_score, player_streak, questions_played = line.strip().split(',')
+                leaderboard.append((player_name, int(player_score), int(player_streak), int(questions_played)))
+
+    # Append new score to leaderboard
+    leaderboard.append((name, score, highest_streak, num_questions))
+
+    # Sort leaderboard by score in descending order
+    leaderboard.sort(key=lambda leaderboard_entry: leaderboard_entry[1], reverse=True)
+
+    # Format leaderboard to be neatly aligned
+    with open(leaderboard_file, 'w') as file:
+        # Write the header
+        header = f"{'Name':<15} {'Score':<10} {'Streak':<10} {'Questions Played':<20}\n"
+        file.write(header)
+        file.write("="*len(header) + "\n")
+        
+        # Write the leaderboard entries
+        for player_name, player_score, player_streak, questions_played in leaderboard:
+            file.write(f"{player_name:<15} {player_score:<10} {player_streak:<10} {questions_played:<20}\n")
+
+
+def display_leaderboard():
+    print("\nLeaderboard:")
+    if os.path.exists(leaderboard_file):
+        with open(leaderboard_file, 'r') as file:
+            for line in file:
+                print(line, end="")
+    else:
+        print("No leaderboard data available.")
+        
 
 def apply_hint(answers, correct_answer, option_labels, score):
     incorrect_answers = [ans for ans in answers if ans != correct_answer]
@@ -285,9 +406,6 @@ def score_multiplier(current_streak):
         return 30
 
 
-
-
-
 def text_cleanup(text):
     text = (html.unescape(text)).replace("\\'", "'")
     return text
@@ -308,8 +426,8 @@ def question_count(category_id):
     total_hard = questions["category_question_count"]["total_hard_question_count"]
     return f"\nTime To Do A Quiz About {category_dict.get(category_id)}!\nTotal Questions About This Category: {total_category_questions}\nTotal Easy Questions: {total_easy}\nTotal Medium Questions: {total_medium}\nTotal Hard Questions: {total_hard}\n"
  
- 
+
 if __name__ == "__main__":
-    main()
+    main_menu()
 
 
