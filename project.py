@@ -39,7 +39,7 @@ def get_questions_amount():
             else:
                 raise ValueError
             
-        except Exception:
+        except ValueError:
             print("Invalid amount")
             continue
 
