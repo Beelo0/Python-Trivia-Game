@@ -8,7 +8,7 @@ from pyfiglet import Figlet
 
 figlet = Figlet()
 figlet.setFont(font = "slant")
-leaderboard_file = 'D:\Python Projects\CS50P - Final Project\leaderboard.txt'
+leaderboard_file = 'CS50P - Final Project\leaderboard.txt'
 
 def main_menu():
     game_modes = [["1.", "PLAY!"],
@@ -310,44 +310,51 @@ def add_to_leaderboard_prompt(score, highest_streak, num_questions):
     add_prompt = input("Would you like to add your score to the leaderboard? (Y/N): ").strip().upper()
     if add_prompt == 'Y':
         name = input("Enter your name: ").strip()
+        print(f"DEBUG: Adding to leaderboard: {name}, Score: {score}, Streak: {highest_streak}, Questions: {num_questions}")  # Debugging line
         add_to_leaderboard(name, score, highest_streak, num_questions)
-        display_leaderboard()
+        display_leaderboard()  # Display the leaderboard immediately to verify the entry is there
     else:
         print("No entry added to the leaderboard.")
-
+    
+    input("\nPress Enter to continue...")
 
 def add_to_leaderboard(name, score, highest_streak, num_questions):
     leaderboard = []
     
-    # Read existing leaderboard
     if os.path.exists(leaderboard_file):
         with open(leaderboard_file, 'r') as file:
-            
-            # Skip header if it exists
-            next(file)
+            header = next(file)
             
             for line in file:
-                player_name, player_score, player_streak, questions_played = line.strip().split(',')
-                leaderboard.append((player_name, int(player_score), int(player_streak), int(questions_played)))
+                line = line.strip()
+                if not line or line.startswith("="):
+                    continue
+                
+                parts = line.split()
+                if len(parts) != 4:
+                    continue
+                try:
+                    player_name = parts[0]
+                    player_score = int(parts[1])
+                    player_streak = int(parts[2])
+                    questions_played = int(parts[3])
+                    leaderboard.append((player_name.strip(), player_score, player_streak, questions_played))
+                except ValueError:
+                    continue
 
-    # Append new score to leaderboard
-    leaderboard.append((name, score, highest_streak, num_questions))
+    leaderboard.append((name.strip(), score, highest_streak, num_questions))
 
-    # Sort leaderboard by score in descending order
     leaderboard.sort(key=lambda leaderboard_entry: leaderboard_entry[1], reverse=True)
 
-    # Format leaderboard to be neatly aligned
     with open(leaderboard_file, 'w') as file:
-        # Write the header
         header = f"{'Name':<15} {'Score':<10} {'Streak':<10} {'Questions Played':<20}\n"
         file.write(header)
-        file.write("="*len(header) + "\n")
+        file.write("=" * len(header) + "\n")
         
-        # Write the leaderboard entries
         for player_name, player_score, player_streak, questions_played in leaderboard:
             file.write(f"{player_name:<15} {player_score:<10} {player_streak:<10} {questions_played:<20}\n")
 
-
+    
 def display_leaderboard():
     print("\nLeaderboard:")
     if os.path.exists(leaderboard_file):
@@ -429,5 +436,6 @@ def question_count(category_id):
 
 if __name__ == "__main__":
     main_menu()
+
 
 
