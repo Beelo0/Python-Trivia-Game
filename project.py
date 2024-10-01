@@ -59,7 +59,7 @@ def start_game():
     question_type = get_question_type()
 
     url = f"https://opentdb.com/api.php?amount={question_amount}&difficulty={difficulty}&type={question_type}"
-    if category:
+    if category != "all categories":
         url += f"&category={category}"
 
     json_url = requests.get(url).json()
@@ -184,7 +184,7 @@ def get_category():
                                 print("Invalid subcategory selection. Please choose a valid option.")
                 
                     case 14:
-                        return None
+                        return "all categories"
                     
                     case 15:
                         random_category = random.choice(["9", "10", "11", "12", "13", "14", "15", 
