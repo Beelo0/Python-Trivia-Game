@@ -303,7 +303,6 @@ def display_quiz(questions, all_answers, question_type):
             
     print(f"Quiz complete! Your final score: {score} points!")
     
-    # After quiz, prompt for leaderboard entry
     add_to_leaderboard_prompt(score, highest_streak, len(questions))
 
 
@@ -311,13 +310,11 @@ def add_to_leaderboard_prompt(score, highest_streak, num_questions):
     add_prompt = input("Would you like to add your score to the leaderboard? (Y/N): ").strip().upper()
     if add_prompt == 'Y':
         name = input("Enter your name: ").strip()
-        print(f"DEBUG: Adding to leaderboard: {name}, Score: {score}, Streak: {highest_streak}, Questions: {num_questions}")  # Debugging line
         add_to_leaderboard(name, score, highest_streak, num_questions)
-        display_leaderboard()  # Display the leaderboard immediately to verify the entry is there
+        display_leaderboard()
     else:
         print("No entry added to the leaderboard.")
-    
-    input("\nPress Enter to continue...")
+
 
 def add_to_leaderboard(name, score, highest_streak, num_questions):
     leaderboard = []
@@ -357,13 +354,14 @@ def add_to_leaderboard(name, score, highest_streak, num_questions):
 
     
 def display_leaderboard():
-    print("\nLeaderboard:")
+    print("\n\nLeaderboard:\n")
     if os.path.exists(leaderboard_file):
         with open(leaderboard_file, 'r') as file:
             for line in file:
                 print(line, end="")
+        print()
     else:
-        print("No leaderboard data available.")
+        print("\nNo leaderboard data available.\n")
         
 
 def apply_hint(answers, correct_answer, option_labels, score):
