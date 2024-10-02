@@ -65,7 +65,9 @@ def start_game():
     json_url = requests.get(url).json()
     questions = get_questions(json_url)
     all_answers = get_answers(json_url)
-
+    
+    print("\n"*20)
+    print(figlet.renderText("Quiz Started!"))
     display_quiz(questions, all_answers, question_type)
 
 def get_questions_amount():
@@ -247,6 +249,7 @@ def display_quiz(questions, all_answers, question_type):
     score = 0
     streak = 0
     highest_streak = 0
+    total_hints_used = 0
     
     praises_list = ["Good Job!", "Nice Work!", "You're A Genius!!", "Wow!", 
                     "OMG!", "Amazing!", "Spectacular!", "Really Nice!",
@@ -272,6 +275,7 @@ def display_quiz(questions, all_answers, question_type):
         while True:
             user_input = input(f"Please enter your answer ({', '.join(option_labels)}). Enter 'H' for a hint(-10 Pts.): ").strip().upper()
             if user_input == 'H' and question_type == "multiple" and not hint_used:
+                total_hints_used += 1
                 score, hint_used, option_labels, answers = apply_hint(answers, correct_answer, option_labels, score)
                 answer_table = list(zip(option_labels, answers))
                 print(tabulate(answer_table, headers=["Option", "Answer"], tablefmt="rounded_grid", colalign=("center","center")))
@@ -283,7 +287,8 @@ def display_quiz(questions, all_answers, question_type):
         if answers[option_labels.index(user_input)] == correct_answer:
             streak += 1
             score += score_multiplier(streak)
-            print(f"\n\n{'='*30}")
+            print("\n"*30)
+            print(f"{'='*30}")
             print(f"\nCorrect! {random.choice(praises_list)}\n")
             print(f"Current streak: 🔥 {streak}")
             print(f"+{score_multiplier(streak)} points!\n")
@@ -295,28 +300,29 @@ def display_quiz(questions, all_answers, question_type):
                 
         else:
             streak = 0
+            print("\n"*30)
             print(f"\n\n{'='*45}")
             print(f"\nWhoops! That was wrong. Streak Reset! 🔥 {streak}")
             print(f"The correct answer was: {correct_answer}\n")
             print(f"CURRENT SCORE: {score} points\n")
             print(f"{'='*45}")
             
-    print(f"Quiz complete! Your final score: {score} points!")
+    print(f"\n\nQuiz complete! Your final score: {score} points!")
     
-    add_to_leaderboard_prompt(score, highest_streak, len(questions))
+    add_to_leaderboard_prompt(score, highest_streak, len(questions), total_hints_used)
 
 
-def add_to_leaderboard_prompt(score, highest_streak, num_questions):
-    add_prompt = input("Would you like to add your score to the leaderboard? (Y/N): ").strip().upper()
+def add_to_leaderboard_prompt(score, highest_streak, num_questions, total_hints_used):
+    add_prompt = input("\nWould you like to add your score to the leaderboard? (Y/N): ").strip().upper()
     if add_prompt == 'Y':
-        name = input("Enter your name: ").strip()
-        add_to_leaderboard(name, score, highest_streak, num_questions)
+        name = input("\nEnter your name: ").strip()
+        add_to_leaderboard(name, score, highest_streak, num_questions, total_hints_used)
         display_leaderboard()
     else:
         print("No entry added to the leaderboard.")
 
 
-def add_to_leaderboard(name, score, highest_streak, num_questions):
+def add_to_leaderboard(name, score, highest_streak, num_questions, total_hints_used):
     leaderboard = []
     
     if os.path.exists(leaderboard_file):
@@ -329,28 +335,29 @@ def add_to_leaderboard(name, score, highest_streak, num_questions):
                     continue
                 
                 parts = line.split()
-                if len(parts) != 4:
+                if len(parts) != 5:
                     continue
                 try:
                     player_name = parts[0]
                     player_score = int(parts[1])
                     player_streak = int(parts[2])
                     questions_played = int(parts[3])
-                    leaderboard.append((player_name.strip(), player_score, player_streak, questions_played))
+                    player_total_hints_used = int(parts[4])
+                    leaderboard.append((player_name.strip(), player_score, player_streak, questions_played, player_total_hints_used))
                 except ValueError:
                     continue
 
-    leaderboard.append((name.strip(), score, highest_streak, num_questions))
+    leaderboard.append((name.strip(), score, highest_streak, num_questions, total_hints_used))
 
     leaderboard.sort(key=lambda leaderboard_entry: leaderboard_entry[1], reverse=True)
 
     with open(leaderboard_file, 'w') as file:
-        header = f"{'Name':<15} {'Score':<10} {'Streak':<10} {'Questions Played':<20}\n"
+        header = f"{'Name':<15} {'Score':<10} {'Highest Streak':<22} {'Questions Played':<20} {'Hints Used':<10}\n"
         file.write(header)
         file.write("=" * len(header) + "\n")
         
-        for player_name, player_score, player_streak, questions_played in leaderboard:
-            file.write(f"{player_name:<15} {player_score:<10} {player_streak:<10} {questions_played:<20}\n")
+        for player_name, player_score, player_streak, questions_played, player_total_hints_used in leaderboard:
+            file.write(f"{player_name:<15} {player_score:<10} {player_streak:<22} {questions_played:<20} {player_total_hints_used:<10}\n")
 
     
 def display_leaderboard():
