@@ -29,7 +29,6 @@ def main_menu():
                 
                 case 2:
                     display_leaderboard()
-                    break
                 
                 case 3:
                     while True:
@@ -310,16 +309,39 @@ def display_quiz(questions, all_answers, question_type):
     print(f"\n\nQuiz complete! Your final score: {score} points!")
     
     add_to_leaderboard_prompt(score, highest_streak, len(questions), total_hints_used)
+    
+    
+    while True:
+        replay = input("Would you like to play again? (Y/N): ").strip().upper()
+        if replay == "Y":
+            main_menu()
+            
+        elif replay == "N":
+            print("Goodbye! Thanks for playing!")
+            break
+        
+        else:
+            print("\nInvalid Input. Please enter Y or N")
+            continue
 
 
 def add_to_leaderboard_prompt(score, highest_streak, num_questions, total_hints_used):
-    add_prompt = input("\nWould you like to add your score to the leaderboard? (Y/N): ").strip().upper()
-    if add_prompt == 'Y':
-        name = input("\nEnter your name: ").strip()
-        add_to_leaderboard(name, score, highest_streak, num_questions, total_hints_used)
-        display_leaderboard()
-    else:
-        print("No entry added to the leaderboard.")
+    
+    while True:
+        add_prompt = input("\nWould you like to add your score to the leaderboard? (Y/N): ").strip().upper()
+        if add_prompt == 'Y':
+            name = input("\nEnter your name: ").strip()
+            add_to_leaderboard(name, score, highest_streak, num_questions, total_hints_used)
+            display_leaderboard()
+            break
+        elif add_prompt == "N":
+            print("No entry added to the leaderboard.")
+            break
+        
+        else:
+            print("Invalid Input. Please enter Y or N")
+            continue
+            
 
 
 def add_to_leaderboard(name, score, highest_streak, num_questions, total_hints_used):
