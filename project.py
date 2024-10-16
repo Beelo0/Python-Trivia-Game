@@ -1,18 +1,21 @@
-import requests
-import random
-import html
-import sys
 import os
+import random
+import sys
+import html
+
+import requests
 from tabulate import tabulate
 from pyfiglet import Figlet
+
 
 # Initialize figlet which is for the stylized titles
 figlet = Figlet()
 
-# Setfont for figlet. "slant" is the name of the font
+# Setting the global font for figlet. "slant" is the name of the font
 figlet.setFont(font = "slant")
 
 # Relative file path for correct placement and reading of leaderboard file
+# Base dir is split into its own variable for readability
 base_dir = os.path.dirname(os.path.abspath(__file__))
 leaderboard_file = os.path.join(base_dir, "leaderboard.txt")
 
@@ -53,7 +56,8 @@ def main_menu():
                         confirmation = input("Are you sure you want to exit? (Y/N): ").strip().upper()
                         
                         if confirmation == "Y":
-                            sys.exit("Goodbye! Thanks for playing!")
+                            print(figlet.renderText("Goodbye! Thanks for playing!"))
+                            sys.exit()
                             
                         elif confirmation == "N":
                             break  
@@ -285,6 +289,7 @@ def get_difficulty():
             print("Invalid difficulty.")
             continue
 
+
 # Prompts the user for question type
 def get_question_type():
 
@@ -305,6 +310,7 @@ def get_question_type():
         except Exception:
             print("Invalid Question Type")
             continue
+
 
 # Display the quiz itself
 def display_quiz(questions, all_answers, question_type):
@@ -347,7 +353,10 @@ def display_quiz(questions, all_answers, question_type):
         # User answer selection and input validation
         # Hint system 
         while True:
-            user_input = input(f"Please enter your answer ({', '.join(option_labels)}). Enter 'H' for a hint(-10 Pts.): ").strip().upper()
+            if question_type == "boolean":
+                user_input = input(f"Please enter your answer ({', '.join(option_labels)}): ").strip().upper()
+            elif question_type == "multiple":
+                user_input = input(f"Please enter your answer ({', '.join(option_labels)}). Enter 'H' for a hint(-10 Pts.): ").strip().upper()
             
             # Hint option if user inputs 'H'. Hint only available for multiple choice questions (MCQ). 1 hint per question
             if user_input == 'H' and question_type == "multiple" and not hint_used:
@@ -406,12 +415,13 @@ def display_quiz(questions, all_answers, question_type):
             main_menu()
             
         elif replay == "N":
-            print("Goodbye! Thanks for playing!")
+            print(figlet.renderText("Goodbye! Thanks for playing!"))
             break
         
         else:
             print("\nInvalid Input. Please enter Y or N")
             continue
+
 
 # Prompts user to add their score to leaderboard
 def add_to_leaderboard_prompt(score, highest_streak, num_questions, total_hints_used):
@@ -500,21 +510,18 @@ def display_leaderboard():
     else:
         print("\nNo leaderboard data available.\n")
         
+
 # Hint system logic
 def apply_hint(answers, correct_answer, option_labels, score):
 
-    # Append passed-in wrong answers to a list
-    incorrect_answers = [ans for ans in answers if ans != correct_answer]
-    if incorrect_answers:
-        removed_answer = random.choice(incorrect_answers) # Randomly select one of the wrong answer
-        answers.remove(removed_answer) # Remove the randomly selected wrong answer
-        option_labels = option_labels[:len(answers)] # Shorten the option labels to only 3 options
-        print(f"Hint used! One wrong answer removed (cost: -10 points).")
-        score -= 10 # Cost of 1 hint
-        return score, True, option_labels, answers # Returns the updated score, option labels, answers and set 'hint used' to True
-    else:
-        print("No incorrect answers available to remove.")
-        return score, False, option_labels, answers
+    # Iterates through the list of answers and removes one incorrect answer
+    for ans in answers:
+        if ans != correct_answer:
+            answers.remove(ans)  # Remove the first incorrect answer that was found
+            option_labels = option_labels[:len(answers)]  # Adjust option labels
+            print(f"Hint used! One wrong answer removed (cost: -10 points).")
+            score -= 10  # Cost of 1 hint
+            return score, True, option_labels, answers
     
 
 # Retrieve questions from API       
@@ -555,10 +562,11 @@ def score_multiplier(current_streak):
         return 30
 
 
-# Simple text cleanup function
+# Simple text cleanup function. It also fixes formatting of the respnse to correctly display certain symbols
 def text_cleanup(text):
     text = (html.unescape(text)).replace("\\'", "'")
     return text
+
 
 # Displays total currently available number of question from specified category
 def question_count(category_id):
